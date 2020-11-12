@@ -20,13 +20,13 @@
 --
 -- API FUNCTION
 --
--- text AsTopoJSON(TopoGeometry, edgeMapTable)
+-- text AsTopoJSON(TopoGeometry, edgeMapTable, BoundingBox)
 --
 -- Format specification here:
 -- http://github.com/mbostock/topojson-specification/blob/master/README.md
 --
 -- }{
-CREATE OR REPLACE FUNCTION topology.AsTopoJSON(tg topology.TopoGeometry, edgeMapTable regclass)
+CREATE OR REPLACE FUNCTION topology.AsTopoJSON(tg topology.TopoGeometry, edgeMapTable regclass, bb geometry)
   RETURNS text AS
 $$
 DECLARE
@@ -135,6 +135,9 @@ BEGIN
     SELECT array_agg(edge_id)
     FROM edge_data e
     WHERE
+         (bb IS null OR
+         -- if bb is not null dont't care holes outside bb 
+         NOT(NOT bb && geom and abs_next_left_edge = abs_next_right_edge and start_node = end_node)) and 
          ( e.left_face = ANY ( faces ) OR
            e.right_face = ANY ( faces ) )
     INTO bounding_edges;
@@ -303,3 +306,22 @@ END
 $$ LANGUAGE 'plpgsql' VOLATILE; -- writes into visited table
 -- } AsTopoJSON(TopoGeometry, visited_table)
 
+
+--{
+--
+-- API FUNCTION
+--
+-- text AsTopoJSON(TopoGeometry, edgeMapTable, BoundingBox)
+--
+-- Format specification here:
+-- http://github.com/mbostock/topojson-specification/blob/master/README.md
+--
+-- }{
+CREATE OR REPLACE FUNCTION topology.AsTopoJSON(tg topology.TopoGeometry, edgeMapTable regclass)
+  RETURNS text AS
+$$
+BEGIN
+  RETURN topology.AsTopoJSON(tg, edgeMapTable, null);
+END
+$$ LANGUAGE 'plpgsql' VOLATILE; -- writes into visited table
+-- } AsTopoJSON(TopoGeometry, visited_table)
