@@ -35,6 +35,16 @@ SELECT 'A2-vanilla', feature_name, topology.AsTopoJSON(feature, NULL)
  WHERE feature_name IN ('P1P2', 'P3P4')
  ORDER BY feature_name;
 
+--- Areal non-hierarchical, with bounding box as the same size as the geometry bounding box
+SELECT 'A1-bb=mbr', feature_name, topology.AsTopoJSON(feature, NULL, ST_Envelope(feature::geometry))
+ FROM features.land_parcels 
+ WHERE feature_name = 'P1';
+
+--- Areal non-hierarchical, with bounding box as that is smaller than geometry bounding box
+SELECT 'A1-bb<mbr', feature_name, topology.AsTopoJSON(feature, NULL, ST_Expand(ST_Envelope(feature::geometry),-3))
+ FROM features.land_parcels 
+ WHERE feature_name = 'P1';
+
 -- Now again with edge mapping {
 CREATE TEMP TABLE edgemap (arc_id serial, edge_id int unique);
 

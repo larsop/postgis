@@ -27,6 +27,8 @@ A1-vanilla|P4|{ "type": "MultiPolygon", "arcs": [[[-2]]]}
 A1-vanilla|P5|{ "type": "MultiPolygon", "arcs": [[[-1],[25]]]}
 A2-vanilla|P1P2|{ "type": "MultiPolygon", "arcs": [[[21,20,5,6,-17,-18,-13,-12]]]}
 A2-vanilla|P3P4|{ "type": "MultiPolygon", "arcs": [[[-2]],[[17,16,7,-15,-16,-14]]]}
+A1-bb=mbr|P1|{ "type": "MultiPolygon", "arcs": [[[21,20,5,-19,-20,-12]]]}
+A1-bb<mbr|P1|{ "type": "MultiPolygon", "arcs": [[[21,20,5,-19,-20,-12]]]}
 L1-edgemap|R1|{ "type": "MultiLineString", "arcs": [[0,-2]]}
 L1-edgemap|R2|{ "type": "MultiLineString", "arcs": [[2,-4]]}
 L1-edgemap|R3|{ "type": "MultiLineString", "arcs": [[4]]}
