@@ -48,6 +48,7 @@ DECLARE
   shell_faces int[];
   visited_edges int[];
   looking_for_holes BOOLEAN;
+  cmd text; -- used hold commands to run
 BEGIN
 
   IF tg IS NULL THEN
@@ -130,27 +131,48 @@ BEGIN
     looking_for_holes := false;
     shell_faces := ARRAY[]::int[];
 
-    CREATE TEMP TABLE _postgis_topology_astopojson_tmp_edges
-    ON COMMIT DROP
-    AS
-    SELECT
-         ROW_NUMBER() OVER (
-            ORDER BY
-              ST_XMin(e.geom),
-              ST_YMin(e.geom),
-              edge_id
-         ) leftmost_index,
-         e.edge_id,
-         e.left_face,
-         e.right_face,
-         e.next_right_edge,
-         e.next_left_edge
-    FROM edge_data e
-		WHERE
-         (bb IS null OR -- if bb is null don't care about checking for simple holes.
-         NOT(NOT bb && e.geom and e.abs_next_left_edge = e.abs_next_right_edge and e.start_node = e.end_node)) and 
-         ( e.left_face = ANY ( all_faces ) OR
-           e.right_face = ANY ( all_faces ) );
+    IF bb IS NULL THEN -- get all edges for given topology
+      CREATE TEMP TABLE _postgis_topology_astopojson_tmp_edges
+      ON COMMIT DROP
+      AS
+      SELECT
+           ROW_NUMBER() OVER (
+              ORDER BY
+                ST_XMin(e.geom),
+                ST_YMin(e.geom),
+                edge_id
+           ) leftmost_index,
+           e.edge_id,
+           e.left_face,
+           e.right_face,
+           e.next_right_edge,
+           e.next_left_edge
+      FROM edge_data e
+      WHERE
+           ( e.left_face = ANY ( all_faces ) OR
+             e.right_face = ANY ( all_faces ) );
+    ELSE -- Use bb (bounding box) as to make a intersection of all the lines for topo geometry 
+      CREATE TEMP TABLE _postgis_topology_astopojson_tmp_edges
+      ON COMMIT DROP
+      AS
+      SELECT
+           ROW_NUMBER() OVER (
+              ORDER BY
+                ST_XMin(e.geom),
+                ST_YMin(e.geom),
+                edge_id
+           ) leftmost_index,
+           e.edge_id,
+           e.left_face,
+           e.right_face,
+           e.next_right_edge,
+           e.next_left_edge
+      FROM edge_data e
+      WHERE
+           NOT(NOT bb && e.geom and e.abs_next_left_edge = e.abs_next_right_edge and e.start_node = e.end_node) and 
+           ( e.left_face = ANY ( all_faces ) OR
+             e.right_face = ANY ( all_faces ) );
+    END IF;
     
     CREATE INDEX on _postgis_topology_astopojson_tmp_edges (edge_id);
 
