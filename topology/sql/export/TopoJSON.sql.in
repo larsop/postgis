@@ -151,7 +151,7 @@ BEGIN
       WHERE
            ( e.left_face = ANY ( all_faces ) OR
              e.right_face = ANY ( all_faces ) );
-    ELSE -- Use bb (bounding box) as to make a intersection of all the lines for topo geometry 
+    ELSE -- Use bb (bounding box) as to remove holes with a single edge outside the bounding box 
       CREATE TEMP TABLE _postgis_topology_astopojson_tmp_edges
       ON COMMIT DROP
       AS
