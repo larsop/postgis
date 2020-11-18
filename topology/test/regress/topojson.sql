@@ -36,11 +36,13 @@ SELECT 'A2-vanilla', feature_name, topology.AsTopoJSON(feature, NULL)
  ORDER BY feature_name;
 
 --- Areal non-hierarchical, with bounding box as the same size as the geometry bounding box
+--- All holes outside bb should removed, in this test case none
 SELECT 'A1-bb=mbr', feature_name, topology.AsTopoJSON(feature, NULL, ST_Envelope(feature::geometry))
  FROM features.land_parcels 
  WHERE feature_name = 'P1';
 
 --- Areal non-hierarchical, with bounding box as that is smaller than geometry bounding box
+--- TODO we need to a new testcase here has holes 
 SELECT 'A1-bb<mbr', feature_name, topology.AsTopoJSON(feature, NULL, ST_Expand(ST_Envelope(feature::geometry),-3))
  FROM features.land_parcels 
  WHERE feature_name = 'P1';
