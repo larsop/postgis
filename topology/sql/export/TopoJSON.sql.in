@@ -49,6 +49,8 @@ DECLARE
   visited_edges int[];
   looking_for_holes BOOLEAN;
   cmd text; -- used hold commands to run
+  mbr_box geometry;-- holds the mbr geometry
+  bb_intersect_mbr geometry; -- used to hold the intersection beetwenn the mbr and bb
 BEGIN
 
   IF tg IS NULL THEN
@@ -152,6 +154,17 @@ BEGIN
            ( e.left_face = ANY ( all_faces ) OR
              e.right_face = ANY ( all_faces ) );
     ELSE -- Use bb (bounding box) as to remove holes with a single edge outside the bounding box 
+    
+      -- find the mbr for selected faces  
+      SELECT ST_Union(f.mbr) 
+      FROM face f
+      WHERE f.face_id = ANY ( all_faces ) INTO mbr_box;
+      
+      -- find intersection beetween th bb and mbr
+      bb_intersect_mbr = ST_Intersection(mbr_box,bb);
+      
+      -- TODO what should here if we get null here,  Should we return a empty TopoJSON ??
+      
       CREATE TEMP TABLE _postgis_topology_astopojson_tmp_edges
       ON COMMIT DROP
       AS
@@ -169,10 +182,10 @@ BEGIN
            e.next_left_edge
       FROM edge_data e
       WHERE
-           NOT(NOT bb && e.geom and e.abs_next_left_edge = e.abs_next_right_edge and e.start_node = e.end_node) and 
+           NOT (NOT bb_intersect_mbr && e.geom AND e.start_node = e.end_node) AND
            ( e.left_face = ANY ( all_faces ) OR
              e.right_face = ANY ( all_faces ) );
-    END IF;
+      END IF;
     
     CREATE INDEX on _postgis_topology_astopojson_tmp_edges (edge_id);
 
